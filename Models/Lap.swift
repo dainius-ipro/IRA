@@ -1,53 +1,75 @@
+//
+//  Lap.swift
+//  RaceAnalytics
+//
+
 import Foundation
 
-/// Represents a single lap with telemetry data
-struct Lap: Codable, Identifiable {
-    var id: UUID = UUID()
-    var lapNumber: Int
-    var lapTime: Double        // seconds
-    var telemetryPoints: [TelemetryPoint]
+/// In-memory model for a single lap
+struct Lap: Identifiable, Codable {
+    
+    // MARK: - Properties
+    
+    let id: UUID
+    let lapNumber: Int
+    let time: Double // Lap time in seconds
+    let telemetryPoints: [TelemetryPoint]
+    
+    // MARK: - Initializer
+    
+    init(
+        id: UUID = UUID(),
+        lapNumber: Int,
+        time: Double,
+        telemetryPoints: [TelemetryPoint] = []
+    ) {
+        self.id = id
+        self.lapNumber = lapNumber
+        self.time = time
+        self.telemetryPoints = telemetryPoints
+    }
     
     // MARK: - Computed Properties
     
-    var formattedTime: String {
-        let minutes = Int(lapTime) / 60
-        let seconds = lapTime.truncatingRemainder(dividingBy: 60)
-        return String(format: "%d:%05.2f", minutes, seconds)
+    /// Maximum speed in this lap (km/h)
+    var maxSpeed: Double? {
+        telemetryPoints.map { $0.speed }.max()
     }
     
+    /// Average speed in this lap (km/h)
     var averageSpeed: Double {
         guard !telemetryPoints.isEmpty else { return 0 }
-        let sum = telemetryPoints.reduce(0) { $0 + $1.speed }
-        return sum / Double(telemetryPoints.count)
+        let total = telemetryPoints.reduce(0.0) { $0 + $1.speed }
+        return total / Double(telemetryPoints.count)
     }
     
-    var maxSpeed: Double {
-        telemetryPoints.map(\.speed).max() ?? 0
+    /// Maximum RPM in this lap
+    var maxRPM: Int? {
+        telemetryPoints.map { $0.rpm }.max()
     }
     
-    var minSpeed: Double {
-        telemetryPoints.map(\.speed).min() ?? 0
-    }
-    
-    var maxRPM: Int {
-        telemetryPoints.map(\.rpm).max() ?? 0
-    }
-    
-    var averageRPM: Double {
-        guard !telemetryPoints.isEmpty else { return 0 }
-        let sum = telemetryPoints.reduce(0) { $0 + Double($1.rpm) }
-        return sum / Double(telemetryPoints.count)
-    }
-    
-    var maxGForce: Double {
-        telemetryPoints.map(\.gForce).max() ?? 0
+    /// Total distance covered in this lap (meters)
+    var distance: Double {
+        guard let last = telemetryPoints.last,
+              let first = telemetryPoints.first else {
+            return 0
+        }
+        return last.distance - first.distance
     }
 }
 
-/// Represents a single telemetry sample (one moment in time)
-struct TelemetryPoint: Codable {
-    var time: Double          // seconds
-    var speed: Double         // km/h
-    var rpm: Int              // engine RPM
-    var gForce: Double        // lateral or longitudinal G-force
+// MARK: - Equatable
+
+extension Lap: Equatable {
+    static func == (lhs: Lap, rhs: Lap) -> Bool {
+        lhs.id == rhs.id
+    }
+}
+
+// MARK: - Hashable
+
+extension Lap: Hashable {
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
+    }
 }

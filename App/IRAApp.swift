@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import SwiftData
 
 @main
 struct IRAApp: App {
@@ -13,5 +14,6 @@ struct IRAApp: App {
         WindowGroup {
             ContentView()
         }
+        .modelContainer(for: [StoredSession.self, StoredLap.self])
     }
 }
