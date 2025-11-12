@@ -31,7 +31,7 @@ enum Config {
         
         // Priority 3: Hardcoded key (for initial setup only)
         // TODO: Replace with your actual API key or use Keychain
-        return "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"
+        return "API_KEY"
     }()
     
     /// Claude API Base URL
